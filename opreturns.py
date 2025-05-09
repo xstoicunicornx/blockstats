@@ -4,6 +4,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 
 
+"""
+Prints stats about OP_RETURN txs found between the two given block heights.
+It counts how many OP_RETURNs are larger than 83 bytes, and how many OP_RETURN
+outputs there are in each tx with at least 1 of them.
+"""
+
 progress_lock = threading.Lock()
 progress_counter = 0
 

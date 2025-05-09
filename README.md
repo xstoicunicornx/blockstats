@@ -6,8 +6,9 @@ Edit `RPC_USER`, `RPC_PASSWORD` and `RPC_URL` in bitcoin_rpc.py as needed.
 Edit `start_height` and `end_height` as desired in occupancy.py and opreturns.py.
 
 ```shell
-$ python opreturns.py
+$ python baremulti.py
 $ python occupancy.py
+$ python opreturns.py
 ```
 
 ## Requirements

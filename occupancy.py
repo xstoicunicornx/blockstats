@@ -3,6 +3,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 
 
+"""
+Prints stats about the occupancy of blocks between the two given blockheights.
+"""
+
 progress_lock = threading.Lock()
 progress_counter = 0
 
