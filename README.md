@@ -9,6 +9,13 @@ Edit `start_height` and `end_height` as desired in occupancy.py and opreturns.py
 $ python baremulti.py
 $ python occupancy.py
 $ python opreturns.py
+$ python utxodust.py
+```
+
+utxodust.py does not need RPC access, but needs a file with the dumped UTXO set (values and scriptPubKeys at least).
+
+```bash
+$ bitcoin-cli dumptxoutset utxoset.csv '["value","scriptPubKey"]'
 ```
 
 ## Requirements
@@ -32,6 +39,8 @@ You can bump Core/Knots `rpcthreads` setting to match the number of cores in you
 
 | Date       | Block Height |
 |------------|--------------|
+| 2020-01-01 | 610759       |
+| 2021-01-01 | 663984       |
 | 2022-01-01 | 716695       |
 | 2023-01-01 | 769873       |
 | 2024-01-01 | 823866       |
