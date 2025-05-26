@@ -2,6 +2,8 @@ import csv
 
 p2pkh_total = 0
 p2pkh_dust = 0
+p2sh_total = 0
+p2sh_dust = 0
 p2wpkh_total = 0
 p2wpkh_dust = 0
 p2wsh_total = 0
@@ -26,6 +28,12 @@ with open('utxoset.csv', newline='') as f:
             p2pkh_total += 1
             if value < 1000:
                 p2pkh_dust += 1
+            continue
+
+        if spk.startswith('a914') and spk.endswith('87') and len(spk) == 46:
+            p2sh_total += 1
+            if value < 1000:
+                p2sh_dust += 1
             continue
 
         if spk.startswith('0014') and len(spk) == 44:
@@ -56,6 +64,7 @@ def print_summary(name: str, total: int, dust: int) -> None:
     print(f" dust {name} outputs: {dust} ({pct:.2f}%)\n")
 
 print_summary("P2PKH", p2pkh_total, p2pkh_dust)
+print_summary("P2SH", p2sh_total, p2sh_dust)
 print_summary("P2WPKH", p2wpkh_total, p2wpkh_dust)
 print_summary("P2WSH", p2wsh_total, p2wsh_dust)
 print_summary("P2TR", p2tr_total, p2tr_dust)
