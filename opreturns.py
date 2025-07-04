@@ -16,6 +16,7 @@ file. Data saved for each tx includes:
 
 START_HEIGHT = 903000
 STOP_HEIGHT = 903879
+MAX_WORKERS = 2
 FILE_NAME = "opreturn_data.csv"
 
 progress_lock = threading.Lock()
@@ -57,7 +58,7 @@ def parse_block(height, total_blocks):
         print(f"Error processing block {height}: {e}")
         return []
 
-def main(start_height, end_height, max_workers=8):
+def main(start_height, end_height, max_workers):
     global progress_counter
     total_blocks = end_height - start_height + 1
     data = []
@@ -76,4 +77,4 @@ def main(start_height, end_height, max_workers=8):
 
 
 if __name__ == "__main__":
-    main(start_height=800000, end_height=800010, max_workers=16)
+    main(START_HEIGHT, STOP_HEIGHT, MAX_WORKERS)
