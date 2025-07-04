@@ -1,14 +1,22 @@
 from bitcoin_rpc import rpc_call
-from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
-
+import csv
 
 """
 Prints stats about OP_RETURN txs found between the two given block heights.
-It counts how many OP_RETURNs are larger than 83 bytes, and how many OP_RETURN
-outputs there are in each tx with at least 1 of them.
+It saves a list of all transactions that contain OP_RETURN to the indicated
+file. Data saved for each tx includes:
+- block height
+- blockhash
+- tx id
+- OP_RETURN count
+- OP_RETURN size
 """
+
+START_HEIGHT = 903000
+STOP_HEIGHT = 903879
+FILE_NAME = "opreturn_data.csv"
 
 progress_lock = threading.Lock()
 progress_counter = 0
@@ -20,58 +28,52 @@ def parse_block(height, total_blocks):
         blockhash = rpc_call("getblockhash", [height])
         block = rpc_call("getblock", [blockhash, 2])
 
-        size_buckets = {'<=83': 0, '>83': 0}
-        tx_opreturn_counts = defaultdict(int)
+        data = []
 
         for tx in block['tx']:
             if tx['vin'][0].get('coinbase') is not None:
                 continue  # Ignore coinbase txs
-            opreturn_count = 0
 
+            has_opreturn = False
+            opreturn_count = 0
+            opreturn_size = 0
             for vout in tx['vout']:
                 script = vout['scriptPubKey'].get('hex', '')
                 if script.startswith('6a'):
+                    if not has_opreturn:
+                        has_opreturn = True
                     size = int(len(script)/2)
-                    if size <= 83:
-                        size_buckets['<=83'] += 1
-                    else:
-                        size_buckets['>83'] += 1
                     opreturn_count += 1
-
-            if opreturn_count > 0:
-                tx_opreturn_counts[opreturn_count] += 1
+                    opreturn_size += size
+            if has_opreturn:
+                data.append([height, blockhash, tx['txid'], opreturn_count, opreturn_size])
 
         with progress_lock:
             progress_counter += 1
             print(f"Progress: {progress_counter}/{total_blocks} blocks processed", end='\r')
 
-        return size_buckets, tx_opreturn_counts
+        return data
     except Exception as e:
         print(f"Error processing block {height}: {e}")
-        return {'<=83': 0, '>83': 0}, defaultdict(int)
+        return []
 
 def main(start_height, end_height, max_workers=8):
     global progress_counter
-    total_size_buckets = {'<=83': 0, '>83': 0}
-    total_tx_opreturn_counts = defaultdict(int)
     total_blocks = end_height - start_height + 1
+    data = []
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(parse_block, height, total_blocks): height for height in range(start_height, end_height + 1)}
         for future in as_completed(futures):
-            size_buckets, tx_opreturn_counts = future.result()
-            for k in total_size_buckets:
-                total_size_buckets[k] += size_buckets[k]
-            for count, qty in tx_opreturn_counts.items():
-                total_tx_opreturn_counts[count] += qty
+            data += future.result()
 
-    print("\n\nOP_RETURN size buckets:")
-    for bucket, count in total_size_buckets.items():
-        print(f"  {bucket}: {count}")
+    print(f"\n\nOP_RETURN txs found: {len(data)}")
 
-    print("\nTransactions by number of OP_RETURNs (excluding coinbase):")
-    for count in sorted(total_tx_opreturn_counts):
-        print(f"  {count} OP_RETURN(s): {total_tx_opreturn_counts[count]} transactions")
+    print(f"\nSaving data to {FILE_NAME}")
+    with open('some.csv', 'w', newline='') as f:
+        writer = csv.writer(open("./"+FILE_NAME, 'w'))
+        writer.writerows(data)
+
 
 if __name__ == "__main__":
     main(start_height=800000, end_height=800010, max_workers=16)
