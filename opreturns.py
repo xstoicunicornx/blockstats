@@ -38,6 +38,7 @@ def parse_block(height, total_blocks):
             has_opreturn = False
             opreturn_count = 0
             opreturn_size = 0
+            opreturn_data = ''
             for vout in tx['vout']:
                 script = vout['scriptPubKey'].get('hex', '')
                 if script.startswith('6a'):
@@ -46,8 +47,12 @@ def parse_block(height, total_blocks):
                     size = int(len(script)/2)
                     opreturn_count += 1
                     opreturn_size += size
+                    if opreturn_size <= 83:
+                        if opreturn_data:
+                            opreturn_data += '||'
+                        opreturn_data += str(opreturn_count) + '.' + str(size) + '>' + script
             if has_opreturn:
-                data.append([height, blockhash, tx['txid'], opreturn_count, opreturn_size])
+                data.append([height, tx['txid'], opreturn_count, opreturn_size, opreturn_data])
 
         with progress_lock:
             progress_counter += 1
@@ -74,6 +79,7 @@ def main(start_height, end_height, max_workers):
     with open('some.csv', 'w', newline='') as f:
         writer = csv.writer(open("./"+FILE_NAME, 'w'))
         writer.writerows(data)
+    f.close()
 
 
 if __name__ == "__main__":
