@@ -2,13 +2,13 @@ import json
 import requests
 
 RPC_USER = '__cookie__'
-RPC_COOKIE = '/data/bitcoin/.cookie'
+RPC_COOKIE_FILE_PATH = '/data/bitcoin/.cookie'
 RPC_URL = f'http://127.0.0.1:8332/'
 
 HEADERS = {'content-type': 'application/json'}
 
-with open(RPC_COOKIE, 'r') as file:
-    cookie = file.read().rstrip()
+with open(RPC_COOKIE_FILE_PATH, 'r') as file:
+    cookie = file.read().rstrip().replace(RPC_USER + ':', '')
 
 def rpc_call(method, params=None):
     payload = json.dumps({
